@@ -1,0 +1,22 @@
+[package]
+name = "astre-native"
+description = "Astre — binaire natif (CLI, --snapshot). Phase 2 : squelette."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# §I.3 (2) : le binaire s'appelle `astre` (parité avec le C), la crate `astre-native`.
+[[bin]]
+name = "astre"
+path = "src/main.rs"
+
+[dependencies]
+astre-core.workspace = true
+astre-app.workspace = true
+astre-term.workspace = true
+
+[lints]
+workspace = true

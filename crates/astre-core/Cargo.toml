@@ -1,0 +1,16 @@
+[package]
+name = "astre-core"
+description = "Astre — cœur du moteur (math, raster, resolve, CellBuffer, HUD). Zéro dépendance."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# §B.2 : `astre-core` ne dépend de personne. Pas de `libm` ici : la Phase 1
+# utilise la `f32` de la std (voir la note de portage en tête de `lib.rs`).
+[dependencies]
+
+[lints]
+workspace = true

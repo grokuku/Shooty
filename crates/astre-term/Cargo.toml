@@ -1,0 +1,33 @@
+[package]
+name = "astre-term"
+description = "Astre — sortie terminal (session brute + encodeur ANSI différentiel)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# Choix tranché en Phase 2 (question ouverte 6) : `libc` seule, **pas** `crossterm`.
+# Justification détaillée en tête de `src/sys.rs` : `crossterm` n'évite pas `libc`
+# (il en dépend), n'apporte pas ce dont on a besoin ici (diff ANSI maison obligatoire
+# pour la parité octet à octet) et ne gère pas `SIGTSTP`, qu'il faudrait de toute façon
+# écrire à la main. Une dépendance de plus pour trois appels `tcsetattr`/`ioctl`/`read`
+# serait un coût sans contrepartie.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dependencies]
+astre-core.workspace = true
+astre-app.workspace = true
+
+# Seule exception du workspace à `unsafe_code = "forbid"` : la FFI POSIX de `src/sys.rs`
+# (termios, ioctl, read, signaux), avec un `allow` de **module unique**.
+# Cargo n'autorise pas `workspace = true` + surcharge dans le même tableau : les règles
+# du workspace sont donc recopiées ici, à l'identique, sauf `unsafe_code` passé à `deny`.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

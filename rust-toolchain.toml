@@ -1,0 +1,6 @@
+# Chaîne de compilation de référence (§F.9 : versions épinglées).
+# `stable` suffit : la cible WASM se construit avec la même chaîne (+ wasm-pack).
+[toolchain]
+channel = "stable"
+profile = "minimal"
+components = ["rustfmt", "clippy"]

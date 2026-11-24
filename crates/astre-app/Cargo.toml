@@ -1,0 +1,16 @@
+[package]
+name = "astre-app"
+description = "Astre — application (Sim, Renderer, HUD, Presenter, CLI). Phase 2 : squelette."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+astre-core.workspace = true
+astre-scene.workspace = true
+
+[lints]
+workspace = true

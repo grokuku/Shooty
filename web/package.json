@@ -1,0 +1,20 @@
+{
+  "name": "astre-web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Astre — coquille web (WebGL2 + wasm), sans framework ni bundler",
+  "scripts": {
+    "build:wasm": "wasm-pack build --release --target web ../crates/astre-web --out-dir pkg",
+    "build:ts": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "npm run build:wasm && npm run build:ts",
+    "serve": "python3 -m http.server 8000 --directory .",
+    "serve:node": "npx --yes serve . -l 8000",
+    "clean": "rm -rf dist pkg"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

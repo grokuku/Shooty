@@ -1,0 +1,45 @@
+# Workspace virtuel Astre — voir docs/ARCHITECTURE.md §B.
+# Emplacement : racine du dépôt, à côté de `test3Dterminal/` (oracle C gelé, §I.3 (1)).
+[workspace]
+resolver = "2"
+members = [
+    "crates/astre-core",
+    "crates/astre-scene",
+    "crates/astre-app",
+    "crates/astre-term",
+    "crates/astre-native",
+    "crates/astre-web",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "MIT"
+authors = ["Holaf"]
+repository = "https://github.com/grokuku/Shooty"
+
+[workspace.dependencies]
+astre-core = { path = "crates/astre-core" }
+astre-scene = { path = "crates/astre-scene" }
+astre-app = { path = "crates/astre-app" }
+astre-term = { path = "crates/astre-term" }
+# §F.1 : `wasm-bindgen` est la SEULE dépendance d'`astre-web` (cdylib wasm-pack).
+# Version épinglée exactement : un désaccord crate/CLI produit des erreurs d'import
+# à l'exécution, illisibles (risque P3 de §I.1). `wasm-pack` 0.15.1 télécharge le
+# `wasm-bindgen-cli` correspondant au `Cargo.lock`.
+wasm-bindgen = "=0.2.130"
+
+# §B.5.5 : jamais d'`unwrap`/`expect` hors tests, jamais d'`unsafe`.
+# Les crates optent pour ces règles via `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+panic = "abort"

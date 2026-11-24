@@ -1,0 +1,11 @@
+# Sorties Cargo (§B.4)
+/target/
+
+# Coquille web (Phase 3) — sorties de build, jamais versionnées.
+web/node_modules/
+web/dist/
+web/pkg/
+
+# Divers
+*.log
+.DS_Store
