@@ -47,7 +47,17 @@ export interface AtlasPixels {
   readonly data: Uint8Array;
 }
 
-/** Contexte 2D hors écran (OffscreenCanvas si disponible, sinon canvas détaché). */
+/**
+ * Contexte 2D hors écran : `OffscreenCanvas` s'il expose bien un contexte 2D, sinon un
+ * `<canvas>` DOM **détaché** (jamais inséré dans le document).
+ *
+ * Piège vérifié : « `OffscreenCanvas` existe » n'implique pas « `OffscreenCanvas` sait
+ * faire de la 2D ». Safari < 16.4, Firefox < 105 et plusieurs WebView n'exposent
+ * `OffscreenCanvas` qu'en WebGL : `getContext('2d')` y renvoie `null`. Lever une erreur
+ * dans ce cas laissait l'atlas vide, donc le canvas **noir pour toujours** (le
+ * présentateur n'a rien à dessiner), alors que la page, elle, continuait de tourner.
+ * Le repli sur un canvas DOM détaché fait fonctionner ces navigateurs.
+ */
 function makeCanvas(width: number, height: number): {
   ctx: CanvasRenderingContext2D;
   canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -55,14 +65,17 @@ function makeCanvas(width: number, height: number): {
   if (typeof OffscreenCanvas !== 'undefined') {
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (ctx === null) throw new Error('atlas : contexte 2D indisponible (OffscreenCanvas)');
-    return { ctx: ctx as unknown as CanvasRenderingContext2D, canvas };
+    if (ctx !== null) {
+      return { ctx: ctx as unknown as CanvasRenderingContext2D, canvas };
+    }
   }
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (ctx === null) throw new Error('atlas : contexte 2D indisponible');
+  if (ctx === null) {
+    throw new Error("atlas : aucun contexte 2D disponible (ni OffscreenCanvas ni canvas DOM)");
+  }
   return { ctx, canvas };
 }
 

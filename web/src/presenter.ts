@@ -154,11 +154,22 @@ void main() {
 }
 `;
 
+/** Rappels de cycle de vie du présentateur (§I.1, risque P2 : perte de contexte). */
+export interface PresenterHooks {
+  /** Le contexte a été restauré (ou créé) et **aucun atlas** n'est en place : il faut
+   *  en reconstruire un (`web/main.ts` le fait en appelant `setAtlas`). */
+  onAtlasNeeded: () => void;
+  /** `webglcontextlost` : plus aucun dessin possible jusqu'à la restauration. */
+  onContextLost?: () => void;
+  /** `webglcontextrestored` : programme/VAO/VBO reconstruits, atlas à refaire. */
+  onContextRestored?: () => void;
+}
+
 /** Présentateur WebGL2 (une instance par canvas). */
 export class Presenter {
   private readonly gl: WebGL2RenderingContext;
   private readonly canvas: HTMLCanvasElement;
-  private readonly onAtlasNeeded: () => void;
+  private readonly hooks: PresenterHooks;
 
   private program: WebGLProgram | null = null;
   private vao: WebGLVertexArrayObject | null = null;
@@ -179,20 +190,27 @@ export class Presenter {
   /** `true` après une perte de contexte : plus aucun appel GL n'a de sens. */
   private lost = false;
 
-  constructor(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, onAtlasNeeded: () => void) {
+  constructor(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, hooks: PresenterHooks) {
     this.gl = gl;
     this.canvas = canvas;
-    this.onAtlasNeeded = onAtlasNeeded;
+    this.hooks = hooks;
     canvas.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
       this.lost = true;
+      this.hooks.onContextLost?.();
     });
     canvas.addEventListener('webglcontextrestored', () => {
       this.lost = false;
       this.initResources();
-      this.onAtlasNeeded();
+      this.hooks.onContextRestored?.();
+      this.hooks.onAtlasNeeded();
     });
     this.initResources();
+  }
+
+  /** `true` si un atlas a été **réellement** téléversé sur le GPU. */
+  get hasAtlas(): boolean {
+    return this.texture !== null && this.atlasCellW > 0;
   }
 
   /** Largeur de cellule pour laquelle l'atlas courant a été construit. */
@@ -254,17 +272,30 @@ export class Presenter {
   }
 
   /**
-   * Installe un nouvel atlas `R8`.
+   * Installe un nouvel atlas `R8` et retourne `true` si le téléversement a **réussi**.
    *
    * Pendant un rebuild (débouncé côté `atlas.ts`), l'ancienne texture reste liée : une
    * frame n'est jamais dessinée avec un atlas incomplet (§E.3).
+   *
+   * Un échec (contexte perdu dans l'intervalle, allocation refusée, `texImage2D` en
+   * erreur) est **signalé par le retour `false`** : c'est ce qui autorise l'appelant à
+   * réessayer. Le bug d'origine consistait à mémoriser `atlasCellW` même quand
+   * `createTexture`/`texImage2D` échouaient : la coquille croyait alors l'atlas à jour,
+   * ne réessayait plus jamais, et le canvas restait noir sans le moindre message.
    */
-  setAtlas(pixels: AtlasPixels, cellW: number): void {
-    if (this.lost) return;
+  setAtlas(pixels: AtlasPixels, cellW: number): boolean {
+    if (this.lost) return false;
     const gl = this.gl;
     if (this.texture === null) {
-      this.texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, this.texture);
+      const texture = gl.createTexture();
+      if (texture === null) {
+        console.error(
+          'presenter : createTexture() a échoué (contexte GL perdu ou mémoire GPU épuisée)',
+        );
+        return false;
+      }
+      this.texture = texture;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -272,6 +303,13 @@ export class Presenter {
     } else {
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
     }
+    // Un échec antérieur a pu laisser une erreur en attente : on repart d'un état propre.
+    // Drain borné : sur un contexte perdu, `getError()` peut rendre `CONTEXT_LOST_WEBGL`
+    // indéfiniment — boucler sans borne figerait la page.
+    for (let i = 0; i < 8 && gl.getError() !== gl.NO_ERROR; i += 1) {
+      /* vide la file d'erreurs */
+    }
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
@@ -283,9 +321,17 @@ export class Presenter {
       gl.UNSIGNED_BYTE,
       pixels.data,
     );
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) {
+      console.error(
+        `presenter : téléversement de l'atlas refusé (GL error 0x${error.toString(16)})`,
+      );
+      return false;
+    }
     this.atlasWidth = pixels.width;
     this.atlasHeight = pixels.height;
     this.atlasCellW = cellW;
+    return true;
   }
 
   /**
@@ -321,7 +367,17 @@ export class Presenter {
     const glY = canvasH - (info.originY + gridH);
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(glX, glY, gridW, gridH);
-    gl.viewport(glX, glY, gridW, gridH);
+    // Le viewport reste **le canvas entier** : le vertex shader projette déjà des pixels
+    // device vers un NDC calculé sur `uCanvas` (la surface complète). Réduire le viewport
+    // à la boîte de la grille appliquait la transformation **deux fois** (NDC écrasé dans
+    // la boîte) : la grille était alors comprimée de `gridW/availW` et `gridH/availH` et
+    // décalée de `origin` en trop, soit jusqu'à une cellule de dérive quand
+    // `availH mod cellH` est grand. Conséquence visible : les frontières de texels de
+    // l'atlas ne tombaient plus sur des pixels entiers (la dernière ligne/colonne de
+    // chaque cellule échantillonnait le voisin), mesuré à 2,2 % de pixels faux à
+    // `cellW = 64` et 11,2 % à `cellW = 8`. Mesuré après correctif : 0 %.
+    // Le `scissor` suffit à borner le dessin à la grille (letterbox hors grille).
+    gl.viewport(0, 0, canvasW, canvasH);
 
     // 2. Téléversement des instances, en une fois.
     const t0 = performance.now();

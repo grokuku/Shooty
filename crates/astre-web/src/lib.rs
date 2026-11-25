@@ -533,6 +533,14 @@ mod tests {
         app
     }
 
+    /// Nombre de cellules portant un glyphe Braille (`U+2800..=U+28FF`).
+    fn braille_glyphs(buf: &astre_core::CellBuffer) -> usize {
+        buf.cells()
+            .iter()
+            .filter(|c| (0x2800..=0x28FF).contains(&c.glyph))
+            .count()
+    }
+
     #[test]
     fn new_accepts_an_empty_document() {
         assert!(App::build("{}").is_ok());
@@ -669,6 +677,39 @@ mod tests {
         assert_eq!(app.core.orbit().azimuth, before);
         app.push_key(key::LEFT, true);
         assert_ne!(app.core.orbit().azimuth, before);
+    }
+
+    /// `M` doit changer le buffer d'instances GPU (chemin web complet : clé -> `M` ->
+    /// `astre-app::input` -> `orbit.mode` -> `render_frame` -> `resolve` -> packing).
+    ///
+    /// HUD masqué dans la configuration : la seule différence possible vient de la
+    /// **résolution**, pas du libellé « BRAILLE/ASCII » du bandeau. Aucun temps ne s'écoule
+    /// entre les frames (`now_ms` constant, `push_key` force le rendu) : la scène est
+    /// identique, seul le mode change.
+    #[test]
+    fn m_key_toggles_the_glyphs_in_the_instance_buffer() {
+        let mut app = App::build(r#"{"cellPx":16,"hud":false}"#).unwrap();
+        app.set_viewport_px(640, 480);
+        assert_eq!(app.frame(16.0) & frame_bits::RENDERED, frame_bits::RENDERED);
+        let before = app.instances.clone();
+        assert!(
+            braille_glyphs(app.core.cells()) > 0,
+            "mode initial = Braille"
+        );
+
+        app.push_key(b'M' as u32, true);
+        assert_eq!(app.frame(16.0) & frame_bits::RENDERED, frame_bits::RENDERED);
+        assert_ne!(app.instances, before, "`M` doit changer les instances GPU");
+        assert_eq!(
+            braille_glyphs(app.core.cells()),
+            0,
+            "le mode ASCII ne doit produire aucun glyphe Braille"
+        );
+
+        // Aller-retour : `m` retrouve exactement le buffer Braille.
+        app.push_key(b'm' as u32, true);
+        app.frame(16.0);
+        assert_eq!(app.instances, before);
     }
 
     #[test]

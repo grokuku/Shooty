@@ -252,7 +252,7 @@ mod tests {
     #![allow(clippy::expect_used)]
 
     use super::*;
-    use astre_core::{Mode, Palette};
+    use astre_core::{CellBuffer, Mode, Palette};
 
     use crate::clock::StdClock;
 
@@ -263,6 +263,28 @@ mod tests {
             mode: Mode::Braille,
             ..Options::default()
         }
+    }
+
+    /// Hash FNV-1a 64 des cellules (même alimentation que `golden_c_parity.rs`).
+    fn hash_cells(buf: &CellBuffer) -> u64 {
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        for cell in buf.cells() {
+            for word in [cell.glyph, cell.fg, cell.bg, u32::from(cell.flags)] {
+                for byte in word.to_le_bytes() {
+                    h ^= u64::from(byte);
+                    h = h.wrapping_mul(0x0000_0100_0000_01b3);
+                }
+            }
+        }
+        h
+    }
+
+    /// Nombre de cellules portant un glyphe Braille (`U+2800..=U+28FF`).
+    fn braille_glyphs(buf: &CellBuffer) -> usize {
+        buf.cells()
+            .iter()
+            .filter(|c| (0x2800..=0x28FF).contains(&c.glyph))
+            .count()
     }
 
     #[test]
@@ -293,6 +315,43 @@ mod tests {
         assert!(app.apply_key(KeyCode::Left));
         assert!(app.orbit().azimuth < before);
         assert_eq!(app.state().azimuth, app.orbit().azimuth);
+    }
+
+    /// La touche `M` doit changer le **rendu**, pas seulement le libellé du bandeau.
+    ///
+    /// HUD masqué : la seule différence possible vient de la résolution, ce qui rend le
+    /// test sensible à la régression « `resolve(options.mode)` au lieu de `orbit.mode` ».
+    #[test]
+    fn the_m_key_changes_the_rendered_cells() {
+        let mut app = App::new(Options {
+            hud: false,
+            ..options()
+        })
+        .expect("app");
+        let clock = StdClock::new();
+        app.render(&clock);
+        assert_eq!(app.orbit().mode, Mode::Braille);
+        let before = hash_cells(app.cells());
+        assert!(
+            braille_glyphs(app.cells()) > 0,
+            "le mode initial doit être le Braille"
+        );
+
+        assert!(app.apply_key(KeyCode::Char('m')));
+        assert_eq!(app.orbit().mode, Mode::Ascii);
+        app.render(&clock);
+        let after = hash_cells(app.cells());
+        assert_ne!(after, before, "`M` doit changer le CellBuffer rendu");
+        assert_eq!(
+            braille_glyphs(app.cells()),
+            0,
+            "le mode ASCII ne doit produire aucun glyphe Braille"
+        );
+
+        // Aller-retour stable : un second appui retrouve l'image Braille à l'identique.
+        assert!(app.apply_key(KeyCode::Char('M')));
+        app.render(&clock);
+        assert_eq!(hash_cells(app.cells()), before);
     }
 
     #[test]

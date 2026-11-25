@@ -79,7 +79,11 @@ pub struct Options {
     pub start: f64,
     /// Palette de sortie (`--palette`, `--plain`).
     pub palette: Palette,
-    /// Mode de résolution (`--mode`).
+    /// Mode de résolution **initial** (`--mode`).
+    ///
+    /// Ce n'est qu'une graine : [`Options::initial_orbit`] recopie la valeur dans
+    /// [`crate::orbit::Orbit::mode`], que la touche `M` fait ensuite varier. Le rendu lit
+    /// l'état runtime, jamais ces options (sinon `M` n'aurait aucun effet, cf. §D.4).
     pub mode: Mode,
     /// HUD affiché (`--no-hud` le masque).
     pub hud: bool,

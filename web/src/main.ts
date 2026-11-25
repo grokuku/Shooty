@@ -24,6 +24,14 @@ const FRAME_ERROR = 1 << 2;
 const STORAGE_CELL_PX = 'astre.cellPx';
 /** Rebuild d'atlas débouncé (§E.3). */
 const ATLAS_DEBOUNCE_MS = 60;
+/**
+ * Délai minimal entre deux tentatives d'atlas **après un échec**.
+ *
+ * Sans ce plafond, un échec permanent (`OffscreenCanvas` sans 2D, contexte GL perdu)
+ * faisait reconstruire l'atlas à **chaque frame** : 60 allocations de 320 × 320 px par
+ * seconde, 60 `console.error` par seconde, et un canvas noir sans explication.
+ */
+const ATLAS_RETRY_MS = 500;
 /** Période de rafraîchissement du HUD DOM (4 Hz, hors rAF). */
 const HUD_INTERVAL_MS = 250;
 /** Délai maximal du chargement wasm. */
@@ -103,36 +111,99 @@ async function boot(): Promise<void> {
   // timer ne se déclenche jamais et le canvas reste noir. D'où `wantedCellW`.
   let atlasTimer: number | null = null;
   let wantedCellW = 0;
+  /** `performance.now()` du dernier échec d'atlas (`0` = aucun échec depuis le début). */
+  let lastAtlasFailureAt = 0;
   let presenter: Presenter;
-  const buildAtlasNow = (cellW: number): void => {
-    try {
-      presenter.setAtlas(buildAtlas(cellW), cellW);
-      persistCellPx(cellW);
-    } catch (error) {
-      console.error('atlas : reconstruction impossible', error);
-    }
-  };
-  const ensureAtlas = (cellW: number): void => {
-    if (cellW <= 0 || cellW === presenter.atlasCellPx) return;
-    // Premier atlas : construction immédiate, pas de frame noire au démarrage.
-    if (presenter.atlasCellPx === 0) {
-      buildAtlasNow(cellW);
-      return;
-    }
-    // Déjà programmé pour ce palier : ne pas repousser l'échéance.
-    if (atlasTimer !== null && cellW === wantedCellW) return;
+
+  /** Programme une (re)construction d'atlas dans `delayMs`, en écrasant la précédente. */
+  const scheduleAtlas = (cellW: number, delayMs: number): void => {
     wantedCellW = cellW;
     if (atlasTimer !== null) window.clearTimeout(atlasTimer);
     atlasTimer = window.setTimeout(() => {
       atlasTimer = null;
       const target = wantedCellW;
       wantedCellW = 0;
-      buildAtlasNow(target);
-    }, ATLAS_DEBOUNCE_MS);
+      if (target > 0) buildAtlasNow(target);
+    }, delayMs);
   };
-  presenter = new Presenter(gl, canvas, () => {
+
+  /**
+   * Construit et téléverse l'atlas du palier `cellW`.
+   *
+   * Tout échec (pas de contexte 2D, contexte GL perdu, téléversement refusé) est
+   * **visible** : panneau DOM en français (même mécanisme que §F.7) au lieu d'un
+   * `console.error` sans effet à l'écran. Un canvas noir n'est plus jamais muet.
+   */
+  const buildAtlasNow = (cellW: number): void => {
+    try {
+      const pixels = buildAtlas(cellW);
+      if (!presenter.setAtlas(pixels, cellW)) {
+        throw new Error("le présentateur a refusé l'atlas (contexte WebGL2 indisponible)");
+      }
+      lastAtlasFailureAt = 0;
+      hideError('ATLAS_FAILED');
+      persistCellPx(cellW);
+    } catch (error) {
+      lastAtlasFailureAt = performance.now();
+      console.error('atlas : reconstruction impossible', error);
+      // Contexte perdu : le panneau `CONTEXT_LOST` est plus juste, on ne l'écrase pas.
+      if (presenter.isLost) return;
+      showError(
+        'ATLAS_FAILED',
+        `L'atlas de glyphes n'a pas pu être construit pour ${cellW} px de cellule : ${describe(error)}`,
+        'Astre — rendu indisponible',
+      );
+    }
+  };
+
+  const ensureAtlas = (cellW: number): void => {
+    if (cellW <= 0) return;
+    // Contexte perdu : aucun téléversement n'a de sens, la restauration rappellera
+    // `ensureAtlas` via `onAtlasNeeded` (`webglcontextrestored`).
+    if (presenter.isLost) {
+      lastAtlasFailureAt = performance.now();
+      return;
+    }
+    if (presenter.hasAtlas && cellW === presenter.atlasCellPx) return;
+    const now = performance.now();
+    // Après un échec : retenter au plus toutes les ATLAS_RETRY_MS (jamais à 60 Hz).
+    if (lastAtlasFailureAt !== 0) {
+      const since = now - lastAtlasFailureAt;
+      if (since < ATLAS_RETRY_MS) {
+        if (atlasTimer === null) scheduleAtlas(cellW, ATLAS_RETRY_MS - since);
+        return;
+      }
+    }
+    // Premier atlas (ou premier essai après échec) : construction immédiate.
+    if (presenter.atlasCellPx === 0) {
+      buildAtlasNow(cellW);
+      return;
+    }
+    // Déjà programmé pour ce palier : ne pas repousser l'échéance.
+    if (atlasTimer !== null && cellW === wantedCellW) return;
+    scheduleAtlas(cellW, ATLAS_DEBOUNCE_MS);
+  };
+
+  presenter = new Presenter(gl, canvas, {
     // Contexte GL restauré : programme, VAO, VBO recréés ; l'atlas est à refaire.
-    ensureAtlas(app.cell_px());
+    onAtlasNeeded: () => {
+      ensureAtlas(app.cell_px());
+    },
+    // Sans ce message, une perte de contexte (risque P2 de §I.1) rendait la zone 3D
+    // noire **sans rien dire** : la coquille continuait de tourner, le HUD DOM aussi.
+    onContextLost: () => {
+      showError(
+        'CONTEXT_LOST',
+        "Le navigateur a perdu le contexte WebGL2 (mémoire GPU ou pilote). La démo reprend " +
+          'automatiquement dès que le navigateur le restaure ; si cet écran persiste, rechargez la page.',
+        'Astre — contexte graphique perdu',
+      );
+    },
+    onContextRestored: () => {
+      hideError('CONTEXT_LOST');
+      hideError('ATLAS_FAILED');
+      ensureAtlas(app.cell_px());
+    },
   });
 
   // 5. Taille du canvas en pixels device, puis première grille AVANT la première frame
@@ -182,7 +253,8 @@ async function boot(): Promise<void> {
     if ((bits & FRAME_RENDERED) !== 0) {
       const info = readInfo(wasm.memory, app.info_ptr());
       // L'atlas doit correspondre au palier courant : rebuild débouncé si besoin.
-      if (info.cellW !== presenter.atlasCellPx) ensureAtlas(info.cellW);
+      // `ensureAtlas` décide elle-même (atlas absent, palier différent, retry après échec).
+      ensureAtlas(info.cellW);
       const timings = presenter.draw(info, wasm.memory);
       lastUploadUs = timings.uploadUs;
       lastDrawUs = timings.drawUs;
@@ -305,27 +377,43 @@ function describe(error: unknown): string {
   return String(error);
 }
 
+/** Code du panneau actuellement affiché (`''` = aucun) : permet de ne retirer que le sien. */
+let shownErrorCode = '';
+
 /**
  * Panneau d'erreur DOM (aucun `alert`, §F.7) : titre en français, code, détail, et
  * rappel que le terminal natif reste disponible.
  */
-function showError(code: string, detail: string): void {
+function showError(code: string, detail: string, title = 'Astre — démarrage impossible'): void {
   let panel = document.getElementById('error');
   if (panel === null) {
     panel = document.createElement('div');
     panel.id = 'error';
     document.body.appendChild(panel);
   }
-  const title = document.createElement('h1');
-  title.textContent = 'Astre — démarrage impossible';
+  const heading = document.createElement('h1');
+  heading.textContent = title;
   const message = document.createElement('p');
   message.textContent = `[${code}] ${detail}`;
   const hint = document.createElement('p');
   hint.className = 'hint';
   hint.textContent =
     'Le moteur fonctionne aussi en terminal natif : cargo run -p astre-native --release';
-  panel.replaceChildren(title, message, hint);
+  panel.replaceChildren(heading, message, hint);
+  shownErrorCode = code;
   console.error(`[${code}] ${detail}`);
+}
+
+/**
+ * Retire le panneau d'erreur — seulement s'il porte `code` (ou s'il n'y a pas de code).
+ *
+ * Sert aux incidents **récupérables** : atlas reconstruit, contexte graphique restauré.
+ * Une erreur de démarrage, elle, n'est jamais masquée par un succès ultérieur.
+ */
+function hideError(code?: string): void {
+  if (code !== undefined && code !== shownErrorCode) return;
+  document.getElementById('error')?.remove();
+  shownErrorCode = '';
 }
 
 // Aucune rejection non gérée ne doit rester silencieuse.

@@ -519,13 +519,18 @@ frame(now):
   5. state = SceneState::lerp(prev, curr, alpha)
   6. renderer.begin(state.camera, full_rect, &mut sky)      [t_begin]
   7. scene.compose(&mut renderer, &state)                   [t_raster]
-  8. renderer.resolve(mode)                                 [t_resolve]
+  8. renderer.resolve(orbit.mode)                           [t_resolve]
   9. hud.draw(renderer.cells_mut(), &overlay_state)         [t_hud]
  10. presenter.present(&mut surfaces, &metrics)             [t_present]
  11. metrics.observe(...)                                    (fenêtre 0,5 s)
 ```
 
 Règle : `present` est **le seul** point de sortie. Rien entre 6 et 9 ne connaît le backend.
+
+Règle : l'étape 8 consomme le mode **runtime** (`orbit.mode`, celui que `M` fait varier),
+jamais `Options::mode` — les options ne portent que la valeur **initiale** (recopiée dans
+l'orbite par `Options::initial_orbit`). Lire `options.mode` ici fige le rendu au démarrage
+et rend `M` purement décoratif (le libellé du bandeau change, pas les glyphes).
 
 ### D.5 Compteurs : « produit » vs « présenté »
 
