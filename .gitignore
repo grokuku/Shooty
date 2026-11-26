@@ -17,8 +17,8 @@
 /web/pkg/
 
 # ------------------------------------------------------------- config locale
-# Patch local de HET (dépendances `git` + tag remplacées par des chemins).
-# Fichier de développement, JAMAIS versionné : la CI résout le tag `v0.1.0`.
+# Patch local de HET (dépendances `git` épinglées par `rev`, remplacées par des chemins).
+# Fichier de développement, JAMAIS versionné : la CI résout la révision épinglée dans Cargo.toml.
 /.cargo/config.toml
 
 # ------------------------------------------------------------------- divers

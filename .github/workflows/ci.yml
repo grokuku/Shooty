@@ -1,9 +1,9 @@
 # CI Shooty — fmt, clippy, tests, build wasm + smoke.
 # Déclencheurs : push sur `main` et toute pull request.
 #
-# Prérequis : le moteur HET doit être **poussé et tagué `v0.1.0`** (les dépendances
-# `het-*` sont des dépendances `git` + tag). Tant que le tag n'existe pas, ce workflow
-# échoue à la résolution des dépendances : c'est normal, ce n'est pas un bug du jeu.
+# Prérequis : le moteur HET doit être **poussé** sur GitHub (les dépendances
+# `het-*` sont des dépendances `git` épinglées sur une révision `rev` présente sur
+# `main`). Aucune création de tag n'est nécessaire.
 # Aucun `[patch]` local n'est utilisé ici (`.cargo/config.toml` est gitignoré).
 name: CI
 

@@ -29,17 +29,22 @@ python3 -m http.server 8000 --directory .   # puis http://localhost:8000/
 
 ## Dépendances
 
-Le jeu consomme les crates du moteur via des dépendances `git` épinglées sur un tag :
+Le jeu consomme les crates du moteur via des dépendances `git` épinglées sur une
+révision (`rev`) du dépôt HET :
 
 ```toml
-het-core = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
-het-app  = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
-het-term = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
-het-web  = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
+het-core = { git = "https://github.com/grokuku/HET", rev = "dbac58063dd32997cedbe5b3cee83a2abc37c50d" }
+het-app  = { git = "https://github.com/grokuku/HET", rev = "dbac58063dd32997cedbe5b3cee83a2abc37c50d" }
+het-term = { git = "https://github.com/grokuku/HET", rev = "dbac58063dd32997cedbe5b3cee83a2abc37c50d" }
+het-web  = { git = "https://github.com/grokuku/HET", rev = "dbac58063dd32997cedbe5b3cee83a2abc37c50d" }
 ```
 
+Pour mettre à jour le moteur, changez la révision dans `Cargo.toml`
+(`[workspace.dependencies]`) — c'est le seul endroit à modifier.
+
 Pour développer contre une copie locale de HET **sans** toucher aux manifestes,
-créer un `.cargo/config.toml` (gitignoré) :
+créer un `.cargo/config.toml` (gitignoré) — un exemple est fourni dans
+[`.cargo/config.toml.exemple`](.cargo/config.toml.exemple) :
 
 ```toml
 [patch."https://github.com/grokuku/HET"]
@@ -50,11 +55,10 @@ het-web  = { path = "../HET/crates/het-web" }
 ```
 
 **Limite de Cargo à connaître** : le `[patch]` ne dispense pas Cargo de résoudre la
-référence de la dépendance `git` — il télécharge le dépôt et exige que le `tag`
-(ou la `branch`/le `rev`) existe. Tant que `v0.1.0` n'est pas tagué côté HET, il faut
-donc aussi pointer les quatre dépendances sur une référence existante
-(`branch = "main"`), le patch fournissant le code : c'est un écart **local et
-temporaire**, `tag = "v0.1.0"` reste la forme versionnée.
+référence de la dépendance `git` — il télécharge le dépôt et exige que la révision
+(`rev`) existe. Celle épinglée dans `Cargo.toml` existe sur le dépôt HET ; le patch
+fournit alors le code local à la place. Pour les modifications du moteur, changez la
+révision épinglée dans `Cargo.toml` ; le `[patch]` ne sert qu'au développement local.
 
 ## Vérifications
 

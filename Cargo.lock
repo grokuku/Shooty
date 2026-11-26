@@ -17,6 +17,7 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 [[package]]
 name = "het-app"
 version = "0.1.0"
+source = "git+https://github.com/grokuku/HET?rev=dbac58063dd32997cedbe5b3cee83a2abc37c50d#dbac58063dd32997cedbe5b3cee83a2abc37c50d"
 dependencies = [
  "het-core",
 ]
@@ -24,10 +25,12 @@ dependencies = [
 [[package]]
 name = "het-core"
 version = "0.1.0"
+source = "git+https://github.com/grokuku/HET?rev=dbac58063dd32997cedbe5b3cee83a2abc37c50d#dbac58063dd32997cedbe5b3cee83a2abc37c50d"
 
 [[package]]
 name = "het-term"
 version = "0.1.0"
+source = "git+https://github.com/grokuku/HET?rev=dbac58063dd32997cedbe5b3cee83a2abc37c50d#dbac58063dd32997cedbe5b3cee83a2abc37c50d"
 dependencies = [
  "het-app",
  "het-core",
@@ -37,6 +40,7 @@ dependencies = [
 [[package]]
 name = "het-web"
 version = "0.1.0"
+source = "git+https://github.com/grokuku/HET?rev=dbac58063dd32997cedbe5b3cee83a2abc37c50d#dbac58063dd32997cedbe5b3cee83a2abc37c50d"
 dependencies = [
  "het-app",
  "het-core",

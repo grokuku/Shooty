@@ -10,7 +10,7 @@ cible WebAssembly) vit désormais dans le dépôt **HET** :
 
 Shooty ne contient plus que le **jeu** : une scène (`crates/shooty-game`), un binaire
 natif (`crates/shooty-native`) et une coquille web (`crates/shooty-web` + `web/`), tous
-branchés sur les crates `het-*` publiées par HET (dépendances `git` + tag `v0.1.0`).
+branchés sur les crates `het-*` publiées par HET (dépendances `git` épinglées sur une révision).
 
 L'ancienne version de ce document (spécification d'`astre-core`/`astre-app`, désormais
 `het-core`/`het-app`) reste consultable dans l'historique Git de ce dépôt.

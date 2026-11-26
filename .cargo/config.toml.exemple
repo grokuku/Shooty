@@ -1,0 +1,23 @@
+# cargo-local-registry / [patch] local — exemple.
+#
+# Pourquoi : `het-*` n'est pas encore publié sur crates.io. Pour développer Shooty
+# contre une copie LOCALE de HET, on « patche » la source git vers le checkout local.
+# Ce n'est QUE pour le développement sur la même machine : la CI et les autres
+# machines utilisent la révision `rev` épinglée dans `Cargo.toml`.
+#
+# Mode d'emploi :
+#   1. copiez ce fichier vers `.cargo/config.toml` à la racine de ce dépôt :
+#        cp .cargo/config.toml.exemple .cargo/config.toml
+#   2. adaptez le chemin `path` ci-dessous si HET est ailleurs ;
+#   3. `.cargo/config.toml` est ignoré par git (voir .gitignore) : ne le committez pas.
+#
+# Le [patch] ne se propage PAS aux consommateurs en aval : chacun doit déclarer le
+# sien. C'est voulu — c'est un outil de développement, pas une configuration publiée.
+# Note : Cargo résout quand même la révision `rev` épinglée dans `Cargo.toml` avant
+# d'appliquer ce patch ; elle doit donc exister sur le dépôt HET (c'est le cas).
+
+[patch."https://github.com/grokuku/HET"]
+het-core = { path = "../HET/crates/het-core" }
+het-app = { path = "../HET/crates/het-app" }
+het-term = { path = "../HET/crates/het-term" }
+het-web = { path = "../HET/crates/het-web" }
