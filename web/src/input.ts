@@ -4,8 +4,8 @@
  * Règles tenues :
  *
  * - **une seule source de vérité** pour les codes : l'énumération du C
- *   (`test3Dterminal/terminal.h: T3_KEY_UP = 256 …`), reproduite dans
- *   `crates/het-web/src/lib.rs` (`mod key`) ;
+ *   (`HET/test3Dterminal/terminal.h: T3_KEY_UP = 256 …`, l'oracle gelé vit dans le dépôt
+ *   HET), reproduite dans le crate `het-web` (`mod key`) ;
  * - `preventDefault` **ciblé** : uniquement sur les touches réellement consommées, et
  *   seulement si la page a le focus (jamais de blocage global des raccourcis
  *   navigateur) ;

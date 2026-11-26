@@ -1,11 +1,16 @@
 # Shooty
 
-Jeu en développement.
+Jeu en développement. **« Shooty » n'est qu'un nom provisoire** : le nom de travail
+du projet, en attendant un titre définitif. Les crates gardent ce préfixe tant que le
+nom n'est pas arrêté.
 
 Le moteur de rendu terminal (rasterisation Braille/ASCII, HUD, boucle à pas fixe,
 cible WebAssembly) ne vit **pas** ici : il est dans
 **[HET](https://github.com/grokuku/HET)**. Ce dépôt ne contient que le jeu — une scène
 placeholder pour l'instant, le contenu réel reste à écrire.
+
+L'oracle C du moteur (`test3Dterminal/`, la référence gelée des goldens de parité) est
+lui aussi dans HET, et **plus dans ce dépôt** : rien de C n'est compilé ici.
 
 ## Démarrage
 
@@ -34,22 +39,22 @@ het-web  = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
 ```
 
 Pour développer contre une copie locale de HET **sans** toucher aux manifestes,
-cr\u00e9er un `.cargo/config.toml` (gitignor\u00e9) :
+créer un `.cargo/config.toml` (gitignoré) :
 
 ```toml
 [patch."https://github.com/grokuku/HET"]
-het-core = { path = "/chemin/vers/HET/crates/het-core" }
-het-app  = { path = "/chemin/vers/HET/crates/het-app" }
-het-term = { path = "/chemin/vers/HET/crates/het-term" }
-het-web  = { path = "/chemin/vers/HET/crates/het-web" }
+het-core = { path = "../HET/crates/het-core" }
+het-app  = { path = "../HET/crates/het-app" }
+het-term = { path = "../HET/crates/het-term" }
+het-web  = { path = "../HET/crates/het-web" }
 ```
 
-**Limite de Cargo \u00e0 conna\u00eetre** : le `[patch]` ne dispense pas Cargo de r\u00e9soudre la
-r\u00e9f\u00e9rence de la d\u00e9pendance `git` \u2014 il t\u00e9l\u00e9charge le d\u00e9p\u00f4t et exige que le `tag`
-(ou la `branch`/le `rev`) existe. Tant que `v0.1.0` n'est pas tagu\u00e9 c\u00f4t\u00e9 HET, il faut
-donc aussi pointer les quatre d\u00e9pendances sur une r\u00e9f\u00e9rence existante
-(`branch = "main"`), le patch fournissant le code : c'est un \u00e9cart **local et
-temporaire**, `tag = "v0.1.0"` reste la forme versionn\u00e9e.
+**Limite de Cargo à connaître** : le `[patch]` ne dispense pas Cargo de résoudre la
+référence de la dépendance `git` — il télécharge le dépôt et exige que le `tag`
+(ou la `branch`/le `rev`) existe. Tant que `v0.1.0` n'est pas tagué côté HET, il faut
+donc aussi pointer les quatre dépendances sur une référence existante
+(`branch = "main"`), le patch fournissant le code : c'est un écart **local et
+temporaire**, `tag = "v0.1.0"` reste la forme versionnée.
 
 ## Vérifications
 
@@ -62,10 +67,9 @@ node web/tests/smoke.mjs        # après npm run build:wasm
 
 ## Documentation
 
-- Architecture du moteur : [HET/docs/ARCHITECTURE.md](https://github.com/grokuku/HET/blob/main/docs/ARCHITECTURE.md)
+- Architecture du moteur (et de son oracle C gelé) :
+  [HET/docs/ARCHITECTURE.md](https://github.com/grokuku/HET/blob/main/docs/ARCHITECTURE.md)
 - Note locale : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- `test3Dterminal/` : oracle C gelé (référence historique du portage, non compilé par
-  le workspace Rust).
 
 ## Licence
 

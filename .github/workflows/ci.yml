@@ -80,5 +80,5 @@ jobs:
         working-directory: web
         run: npm run typecheck
 
-  # `test3Dterminal/` (oracle C de référence, gelé) n'est PAS construit par cette CI :
-  # il ne fait pas partie du workspace Rust et n'a qu'une valeur documentaire.
+  # Aucun C dans ce dépôt : l'oracle C de référence (`test3Dterminal/`, gelé) vit dans
+  # HET, hors du workspace Rust, et n'est compilé que là-bas et à la demande.

@@ -14,5 +14,6 @@ branchés sur les crates `het-*` publiées par HET (dépendances `git` + tag `v0
 
 L'ancienne version de ce document (spécification d'`astre-core`/`astre-app`, désormais
 `het-core`/`het-app`) reste consultable dans l'historique Git de ce dépôt.
-`test3Dterminal/` conserve l'oracle C gelé à titre de référence historique ; il n'est
-plus le moteur du jeu.
+
+L'oracle C gelé du moteur (`test3Dterminal/`) a été déplacé dans **HET** : il n'existe
+plus dans ce dépôt et rien de C n'y est compilé.
