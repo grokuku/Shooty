@@ -23,11 +23,5 @@ clean:
 
 WIN_CC ?= gcc
 
-quake/relay: quake/relay.c quake/libretro.h term3d.c terminal.c term3d.h terminal.h quake/tyrquake_libretro.so
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(filter %.c,$^) -Lquake -l:tyrquake_libretro.so -Wl,-rpath,'$$ORIGIN' $(LDLIBS) -o $@
-
-quake/relay.exe: quake/relay.c quake/libretro.h term3d.c terminal.c term3d.h terminal.h quake/tyrquake_libretro.dll
-	$(WIN_CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(filter %.c %.dll,$^) $(LDLIBS) -o $@
-
 astre.exe: demo.c demo_scene.c term3d.c terminal.c demo_scene.h terminal.h term3d.h
 	$(WIN_CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -static $(filter %.c,$^) $(LDLIBS) -o $@

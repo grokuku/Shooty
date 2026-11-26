@@ -3,52 +3,6 @@
 version = 3
 
 [[package]]
-name = "astre-app"
-version = "0.1.0"
-dependencies = [
- "astre-core",
- "astre-scene",
-]
-
-[[package]]
-name = "astre-core"
-version = "0.1.0"
-
-[[package]]
-name = "astre-native"
-version = "0.1.0"
-dependencies = [
- "astre-app",
- "astre-core",
- "astre-term",
-]
-
-[[package]]
-name = "astre-scene"
-version = "0.1.0"
-dependencies = [
- "astre-core",
-]
-
-[[package]]
-name = "astre-term"
-version = "0.1.0"
-dependencies = [
- "astre-app",
- "astre-core",
- "libc",
-]
-
-[[package]]
-name = "astre-web"
-version = "0.1.0"
-dependencies = [
- "astre-app",
- "astre-core",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -59,6 +13,35 @@ name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
+
+[[package]]
+name = "het-app"
+version = "0.1.0"
+dependencies = [
+ "het-core",
+]
+
+[[package]]
+name = "het-core"
+version = "0.1.0"
+
+[[package]]
+name = "het-term"
+version = "0.1.0"
+dependencies = [
+ "het-app",
+ "het-core",
+ "libc",
+]
+
+[[package]]
+name = "het-web"
+version = "0.1.0"
+dependencies = [
+ "het-app",
+ "het-core",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "libc"
@@ -89,6 +72,33 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
+
+[[package]]
+name = "shooty-game"
+version = "0.1.0"
+dependencies = [
+ "het-app",
+ "het-core",
+]
+
+[[package]]
+name = "shooty-native"
+version = "0.1.0"
+dependencies = [
+ "het-app",
+ "het-core",
+ "het-term",
+ "shooty-game",
+]
+
+[[package]]
+name = "shooty-web"
+version = "0.1.0"
+dependencies = [
+ "het-web",
+ "shooty-game",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "syn"

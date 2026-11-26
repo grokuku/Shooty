@@ -1,14 +1,11 @@
-# Workspace virtuel Astre — voir docs/ARCHITECTURE.md §B.
-# Emplacement : racine du dépôt, à côté de `test3Dterminal/` (oracle C gelé, §I.3 (1)).
+# Workspace Shooty — le jeu. Le moteur de rendu vit dans HET (dépendances `git` + tag).
+# La racine du dépôt est la racine du workspace.
 [workspace]
 resolver = "2"
 members = [
-    "crates/astre-core",
-    "crates/astre-scene",
-    "crates/astre-app",
-    "crates/astre-term",
-    "crates/astre-native",
-    "crates/astre-web",
+    "crates/shooty-game",
+    "crates/shooty-native",
+    "crates/shooty-web",
 ]
 
 [workspace.package]
@@ -19,18 +16,21 @@ license = "MIT"
 authors = ["Holaf"]
 repository = "https://github.com/grokuku/Shooty"
 
+# Le moteur (`het-*`) est consommé par tag. Pour développer contre une copie locale,
+# créer `.cargo/config.toml` avec un `[patch."https://github.com/grokuku/HET"]`
+# (gitignoré : voir README) — jamais dans ce manifeste.
 [workspace.dependencies]
-astre-core = { path = "crates/astre-core" }
-astre-scene = { path = "crates/astre-scene" }
-astre-app = { path = "crates/astre-app" }
-astre-term = { path = "crates/astre-term" }
-# §F.1 : `wasm-bindgen` est la SEULE dépendance d'`astre-web` (cdylib wasm-pack).
-# Version épinglée exactement : un désaccord crate/CLI produit des erreurs d'import
-# à l'exécution, illisibles (risque P3 de §I.1). `wasm-pack` 0.15.1 télécharge le
-# `wasm-bindgen-cli` correspondant au `Cargo.lock`.
+het-core = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
+het-app = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
+het-term = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
+het-web = { git = "https://github.com/grokuku/HET", tag = "v0.1.0" }
+
+# Version épinglée exactement : un désaccord crate/CLI (`wasm-bindgen`) produit des
+# erreurs d'import à l'exécution, illisibles. `wasm-pack` télécharge le CLI de la
+# version du `Cargo.lock`.
 wasm-bindgen = "=0.2.130"
 
-# §B.5.5 : jamais d'`unwrap`/`expect` hors tests, jamais d'`unsafe`.
+# Jamais d'`unwrap`/`expect` hors tests, jamais d'`unsafe`.
 # Les crates optent pour ces règles via `[lints] workspace = true`.
 [workspace.lints.rust]
 unsafe_code = "forbid"

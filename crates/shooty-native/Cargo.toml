@@ -1,0 +1,23 @@
+[package]
+name = "shooty-native"
+description = "Shooty — binaire natif (`shooty`) : terminal interactif et mode `--snapshot`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# Le binaire s'appelle `shooty` ; la crate est `shooty-native`.
+[[bin]]
+name = "shooty"
+path = "src/main.rs"
+
+[dependencies]
+het-core.workspace = true
+het-app.workspace = true
+het-term.workspace = true
+shooty-game = { path = "../shooty-game" }
+
+[lints]
+workspace = true

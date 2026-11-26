@@ -1,5 +1,5 @@
 {
-  // Coquille web Astre — typage strict, aucune transformation de module (ES natifs).
+  // Coquille web Shooty — typage strict, aucune transformation de module (ES natifs).
   // `tsc` ne sert qu'à (1) vérifier les types, (2) transpiler src/*.ts -> dist/*.js.
   "compilerOptions": {
     "target": "ES2022",

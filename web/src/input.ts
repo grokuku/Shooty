@@ -1,11 +1,11 @@
 /**
- * Clavier → codes Astre — §E.6, §F.5.
+ * Clavier → codes du jeu — §E.6, §F.5.
  *
  * Règles tenues :
  *
  * - **une seule source de vérité** pour les codes : l'énumération du C
  *   (`test3Dterminal/terminal.h: T3_KEY_UP = 256 …`), reproduite dans
- *   `crates/astre-web/src/lib.rs` (`mod key`) ;
+ *   `crates/het-web/src/lib.rs` (`mod key`) ;
  * - `preventDefault` **ciblé** : uniquement sur les touches réellement consommées, et
  *   seulement si la page a le focus (jamais de blocage global des raccourcis
  *   navigateur) ;
@@ -20,7 +20,7 @@
  * `+`, `=`, `_` (zoom avant) et `-` (zoom arrière), plus le pavé numérique.
  */
 
-/** Codes de touches spéciales, identiques au C et à `astre-web` (`mod key`). */
+/** Codes de touches spéciales, identiques au C et à `het-web` (`mod key`). */
 export const KEY = {
   UP: 256,
   DOWN: 257,
@@ -30,7 +30,7 @@ export const KEY = {
   ESC: 27,
 } as const;
 
-/** Codes de zoom (`+`, `=`, `-`, `0`), interceptés par `astre-web::push_key`. */
+/** Codes de zoom (`+`, `=`, `-`, `0`), interceptés par `het-web::push_key`. */
 export const ZOOM_KEY = {
   PLUS: '+'.charCodeAt(0),
   EQUAL: '='.charCodeAt(0),
@@ -49,7 +49,7 @@ export interface InputHooks {
 }
 
 /**
- * Traduit un `KeyboardEvent` en code Astre.
+ * Traduit un `KeyboardEvent` en code de touche du moteur.
  *
  * Retourne `null` pour une touche non consommée (le navigateur garde son comportement).
  */
@@ -104,7 +104,7 @@ export function codeForEvent(event: KeyboardEvent): number | null {
   }
   if (key.length === 1) {
     const code = key.charCodeAt(0);
-    // `r`/`R` recadre (astre-app), `m`/`M` change de mode, `p` est local (HUD DOM),
+    // `r`/`R` recadre (het-app), `m`/`M` change de mode, `p` est local (HUD DOM),
     // `f` est local (plein écran). On ne pousse que ce que Rust sait traiter.
     if (key === 'r' || key === 'R') return 'r'.charCodeAt(0);
     if (key === 'm' || key === 'M') return key.charCodeAt(0);

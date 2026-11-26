@@ -1,0 +1,21 @@
+[package]
+name = "shooty-web"
+description = "Shooty — shim WASM (`#[wasm_bindgen]`) sur `het_web::Engine<ShootyScene>`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# `rlib` pour les tests hôtes, `cdylib` pour `wasm-pack build --target web`.
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+het-web.workspace = true
+wasm-bindgen.workspace = true
+shooty-game = { path = "../shooty-game" }
+
+[lints]
+workspace = true

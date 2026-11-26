@@ -1,12 +1,12 @@
 {
-  "name": "astre-web",
+  "name": "shooty-web",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Astre — coquille web (WebGL2 + wasm), sans framework ni bundler",
+  "description": "Shooty — coquille web (WebGL2 + wasm), sans framework ni bundler",
   "scripts": {
-    "build:wasm": "wasm-pack build --release --target web ../crates/astre-web --out-dir pkg",
+    "build:wasm": "wasm-pack build --release --target web ../crates/shooty-web --out-dir ../../web/pkg",
     "build:ts": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "npm run build:wasm && npm run build:ts",

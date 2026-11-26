@@ -1,0 +1,19 @@
+[package]
+name = "shooty-game"
+description = "Shooty — la scène du jeu (placeholder), implémentation de `het_app::Scene`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+het-core.workspace = true
+het-app.workspace = true
+
+[lints]
+workspace = true

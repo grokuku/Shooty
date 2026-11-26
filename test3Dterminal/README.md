@@ -1,6 +1,9 @@
-# Astre
+# Astre (oracle C gelé)
 
-**Deuxième démo jouable.** [Relais de Cendre](quake/README.md) utilise le moteur de Quake et le rendu Braille d’Astre. Depuis ce dossier, lancer `./quake/relay` sous Linux ou `.\quake\relay.exe` sous Windows.
+> **Référence historique, gelée le 2026-11-24.** Ce dossier est l'oracle de parité du
+> moteur, désormais porté en Rust dans [HET](https://github.com/grokuku/HET). Il n'est
+> plus le moteur du jeu Shooty : `crates/` (HET) fait foi. Le frontend Quake « Relais de
+> Cendre » a été retiré de ce dépôt.
 
 Un moteur 3D en C99 pour les terminaux Linux et Windows. La démo place la caméra en orbite autour de la navette NX-04, en vol stationnaire sur le relais 07. Les flèches permettent d'en examiner les ailes, la verrière et les tuyères sous tous les angles.
 

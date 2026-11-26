@@ -10,7 +10,7 @@
  *
  * Le 9e bit de slot est indispensable : l'atlas compte 512 slots (§E.3) alors que 8
  * bits n'en adressent que 256. Le détail de l'arbitrage est dans
- * `crates/astre-web/src/instances.rs`.
+ * `crates/het-web/src/instances.rs`.
  *
  * Un seul programme, un seul VAO, **un seul `drawArraysInstanced`** par image :
  * quatre sommets (`TRIANGLE_STRIP`) et une instance de 8 octets par cellule. Aucune
@@ -32,7 +32,7 @@
 import { ATLAS_SLOTS, SLOT_COLS, SLOT_ROWS } from './atlas.js';
 import type { AtlasPixels } from './atlas.js';
 
-/** Géométrie lue dans le bloc `PresentInfo` de `astre-web` (16 mots de 32 bits). */
+/** Géométrie lue dans le bloc `PresentInfo` de `het-web` (16 mots de 32 bits). */
 export interface PresentInfo {
   /** Adresse du buffer d'instances dans la mémoire wasm (octets). */
   cellsPtr: number;

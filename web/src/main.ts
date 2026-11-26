@@ -1,27 +1,27 @@
 /**
- * Coquille web d'Astre — §B.3, §D.3, §F.7.
+ * Coquille web de Shooty — §B.3, §D.3, §F.7.
  *
  * Rôle volontairement mince : (1) charger le wasm, (2) appeler `App.frame(now)` à
  * chaque `requestAnimationFrame`, (3) dessiner le buffer d'instances que Rust lui donne,
  * (4) pousser les événements. La coquille ne connaît **ni** la 3D, **ni** la résolution
- * de cellules, **ni** le timing : tout cela vit dans `astre-web`.
+ * de cellules, **ni** le timing : tout cela vit dans `het-web`.
  *
  * Pas de bundler : modules ES natifs, `wasm-bindgen --target web`, `tsc` en simple
  * transpilation. Aucun framework CSS ni JS.
  */
 
-import init, { App } from '../pkg/astre_web.js';
-import type { InitOutput } from '../pkg/astre_web.js';
+import init, { App } from '../pkg/shooty_web.js';
+import type { InitOutput } from '../pkg/shooty_web.js';
 import { buildAtlas } from './atlas.js';
 import { attachInput } from './input.js';
 import { Presenter, readInfo } from './presenter.js';
 
-/** Bits de retour de `App::frame` (miroir de `astre_web::frame_bits`). */
+/** Bits de retour de `App::frame` (miroir de `het_web::frame_bits`). */
 const FRAME_RENDERED = 1 << 0;
 const FRAME_ERROR = 1 << 2;
 
 /** Clé de persistance du zoom (décision de la Phase 3, écart assumé avec §E.8). */
-const STORAGE_CELL_PX = 'astre.cellPx';
+const STORAGE_CELL_PX = 'shooty.cellPx';
 /** Rebuild d'atlas débouncé (§E.3). */
 const ATLAS_DEBOUNCE_MS = 60;
 /**
@@ -79,8 +79,8 @@ async function boot(): Promise<void> {
   if (gl === null) {
     showError(
       'WEBGL2_UNAVAILABLE',
-      "Ce navigateur n'expose pas WebGL2. Le moteur Astre fonctionne aussi en terminal " +
-        "natif : ./astre (crate astre-native). Aucun repli Canvas2D n'est fourni.",
+      "Ce navigateur n'expose pas WebGL2. La version terminal fonctionne sans WebGL : " +
+        "natif : ./shooty (crate shooty-native). Aucun repli Canvas2D n'est fourni.",
     );
     return;
   }
@@ -151,7 +151,7 @@ async function boot(): Promise<void> {
       showError(
         'ATLAS_FAILED',
         `L'atlas de glyphes n'a pas pu être construit pour ${cellW} px de cellule : ${describe(error)}`,
-        'Astre — rendu indisponible',
+        'Shooty — rendu indisponible',
       );
     }
   };
@@ -196,7 +196,7 @@ async function boot(): Promise<void> {
         'CONTEXT_LOST',
         "Le navigateur a perdu le contexte WebGL2 (mémoire GPU ou pilote). La démo reprend " +
           'automatiquement dès que le navigateur le restaure ; si cet écran persiste, rechargez la page.',
-        'Astre — contexte graphique perdu',
+        'Shooty — contexte graphique perdu',
       );
     },
     onContextRestored: () => {
@@ -295,7 +295,7 @@ function configFromStorage(): Record<string, number | string> {
 }
 
 /**
- * Zoom persisté (`localStorage["astre.cellPx"]`).
+ * Zoom persisté (`localStorage["shooty.cellPx"]`).
  *
  * Écart assumé avec §E.8, qui ne voulait **rien** persister : la Phase 3 demande la
  * persistance. D'où les précautions de §E.8.3 : lecture/écriture en `try/catch` (iframe
@@ -384,7 +384,7 @@ let shownErrorCode = '';
  * Panneau d'erreur DOM (aucun `alert`, §F.7) : titre en français, code, détail, et
  * rappel que le terminal natif reste disponible.
  */
-function showError(code: string, detail: string, title = 'Astre — démarrage impossible'): void {
+function showError(code: string, detail: string, title = 'Shooty — démarrage impossible'): void {
   let panel = document.getElementById('error');
   if (panel === null) {
     panel = document.createElement('div');
@@ -398,7 +398,7 @@ function showError(code: string, detail: string, title = 'Astre — démarrage i
   const hint = document.createElement('p');
   hint.className = 'hint';
   hint.textContent =
-    'Le moteur fonctionne aussi en terminal natif : cargo run -p astre-native --release';
+    'Le moteur fonctionne aussi en terminal natif : cargo run -p shooty-native --release';
   panel.replaceChildren(heading, message, hint);
   shownErrorCode = code;
   console.error(`[${code}] ${detail}`);

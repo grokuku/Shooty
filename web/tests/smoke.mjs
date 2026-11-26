@@ -16,12 +16,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import init, { App } from '../pkg/astre_web.js';
+import init, { App } from '../pkg/shooty_web.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const wasmPath = join(here, '..', 'pkg', 'astre_web_bg.wasm');
+const wasmPath = join(here, '..', 'pkg', 'shooty_web_bg.wasm');
 
-/** Bits de `App::frame` (miroir de `astre_web::frame_bits`). */
+/** Bits de `App::frame` (miroir de `het_web::frame_bits`). */
 const RENDERED = 1 << 0;
 const SKIPPED = 1 << 1;
 const ERROR = 1 << 2;

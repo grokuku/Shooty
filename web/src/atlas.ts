@@ -6,7 +6,7 @@
  * de couverture par texel) : `0` = fond, `255` = encre. Le fragment shader mélange
  * `mix(bg, fg, texel)`, il n'y a donc **ni alpha ni blending** côté GL.
  *
- * Occupation (contrat d'ABI avec `crates/astre-web/src/instances.rs`) :
+ * Occupation (contrat d'ABI avec `crates/het-web/src/instances.rs`) :
  *
  * | Slots | Contenu | Codepoints |
  * | --- | --- | --- |

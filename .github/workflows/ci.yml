@@ -1,0 +1,84 @@
+# CI Shooty — fmt, clippy, tests, build wasm + smoke.
+# Déclencheurs : push sur `main` et toute pull request.
+#
+# Prérequis : le moteur HET doit être **poussé et tagué `v0.1.0`** (les dépendances
+# `het-*` sont des dépendances `git` + tag). Tant que le tag n'existe pas, ce workflow
+# échoue à la résolution des dépendances : c'est normal, ce n'est pas un bug du jeu.
+# Aucun `[patch]` local n'est utilisé ici (`.cargo/config.toml` est gitignoré).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ------------------------------------------------------------------ rust
+  rust:
+    name: rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # La toolchain est épinglée par rust-toolchain.toml (stable + rustfmt + clippy) ;
+      # les runners GitHub embarquent rustup. On s'assure juste que les composants
+      # sont là.
+      - name: Toolchain (rustfmt + clippy)
+        run: rustup component add rustfmt clippy
+
+      - name: fmt
+        run: cargo fmt --all --check
+
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: test
+        run: cargo test --workspace
+
+  # ------------------------------------------------------------------- web
+  web:
+    name: web (wasm + smoke + typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain (cible wasm)
+        run: rustup target add wasm32-unknown-unknown
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # wasm-pack via npm : évite toute action tierce non officielle.
+      - name: Install wasm-pack
+        run: npm install -g wasm-pack@latest
+
+      # wasm-pack résout --out-dir RELATIVEMENT AU CRATE (crates/shooty-web),
+      # donc ../../web/pkg vise bien <racine>/web/pkg. Ne pas « simplifier » en
+      # web/pkg depuis la racine : le chemin serait doublement imbriqué.
+      - name: Build wasm (release)
+        working-directory: crates/shooty-web
+        run: wasm-pack build --release --target web --out-dir ../../web/pkg
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Smoke test (ABI wasm, sans navigateur)
+        working-directory: web
+        run: node tests/smoke.mjs
+
+      - name: Typecheck (tsc --noEmit)
+        working-directory: web
+        run: npm run typecheck
+
+  # `test3Dterminal/` (oracle C de référence, gelé) n'est PAS construit par cette CI :
+  # il ne fait pas partie du workspace Rust et n'a qu'une valeur documentaire.
